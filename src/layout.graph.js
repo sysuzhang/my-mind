@@ -125,7 +125,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 	var R = this.SPACING_RANK/2;
 
 	/* first part */
-	var y1 = item.geparallel().getVerticalAnchor(item);
+	var y1 = item.getShape().getVerticalAnchor(item);
 	if (side == "left") {
 		var x1 = dom.content.offsetLeft - 0.5;
 	} else {
@@ -137,7 +137,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 
 	if (children.length == 1) {
 		var child = children[0];
-		var y2 = child.geparallel().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
+		var y2 = child.getShape().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
 		var x2 = this._getChildAnchor(child, side);
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
@@ -163,8 +163,8 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
  	var x = x2;
  	var xx = x + (side == "left" ? -R : R);
 
-	var y1 = c1.geparallel().getVerticalAnchor(c1) + c1.getDOM().node.offsetTop;
-	var y2 = c2.geparallel().getVerticalAnchor(c2) + c2.getDOM().node.offsetTop;
+	var y1 = c1.getShape().getVerticalAnchor(c1) + c1.getDOM().node.offsetTop;
+	var y2 = c2.getShape().getVerticalAnchor(c2) + c2.getDOM().node.offsetTop;
 	var x1 = this._getChildAnchor(c1, side);
 	var x2 = this._getChildAnchor(c2, side);
 
@@ -178,7 +178,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 
 	for (var i=1; i<children.length-1; i++) {
 		var c = children[i];
-		var y = c.geparallel().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
+		var y = c.getShape().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
 		ctx.moveTo(x, y);
 		ctx.lineTo(this._getChildAnchor(c, side), y);
 	}
@@ -196,7 +196,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 	/* first part */
 	var R = this.SPACING_RANK/2;
 	
-	var x = item.geparallel().getHorizontalAnchor(item);
+	var x = item.getShape().getHorizontalAnchor(item);
 	var height = (children.length == 1 ? 2*R : R);
 
 	if (side == "top") {
@@ -204,7 +204,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 		var y2 = y1 - height;
 		this._anchorToggle(item, x, y1, side);
 	} else {
-		var y1 = item.geparallel().getVerticalAnchor(item);
+		var y1 = item.getShape().getVerticalAnchor(item);
 		var y2 = dom.content.offsetHeight + height;
 		this._anchorToggle(item, x, dom.content.offsetHeight, side);
 	}
@@ -223,8 +223,8 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 	var offset = dom.content.offsetHeight + height;
 	var y = Math.round(side == "top" ? canvas.height - offset : offset) + 0.5;
 
-	var x1 = c1.geparallel().getHorizontalAnchor(c1) + c1.getDOM().node.offsetLeft;
-	var x2 = c2.geparallel().getHorizontalAnchor(c2) + c2.getDOM().node.offsetLeft;
+	var x1 = c1.getShape().getHorizontalAnchor(c1) + c1.getDOM().node.offsetLeft;
+	var x2 = c2.getShape().getHorizontalAnchor(c2) + c2.getDOM().node.offsetLeft;
 	var y1 = this._getChildAnchor(c1, side);
 	var y2 = this._getChildAnchor(c2, side);
 
@@ -236,7 +236,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 
 	for (var i=1; i<children.length-1; i++) {
 		var c = children[i];
-		var x = c.geparallel().getHorizontalAnchor(c) + c.getDOM().node.offsetLeft;
+		var x = c.getShape().getHorizontalAnchor(c) + c.getDOM().node.offsetLeft;
 		ctx.moveTo(x, y);
 		ctx.lineTo(x, this._getChildAnchor(c, side));
 	}

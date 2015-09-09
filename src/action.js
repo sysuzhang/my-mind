@@ -118,17 +118,17 @@ MM.Action.SetLayout.prototype.undo = function() {
 	this._item.setLayout(this._oldLayout);
 }
 
-MM.Action.Separallel = function(item, shape) {
+MM.Action.SetShape = function(item, shape) {
 	this._item = item;
 	this._shape = shape;
 	this._oldShape = item.getOwnShape();
 }
-MM.Action.Separallel.prototype = Object.create(MM.Action.prototype);
-MM.Action.Separallel.prototype.perform = function() {
-	this._item.separallel(this._shape);
+MM.Action.SetShape.prototype = Object.create(MM.Action.prototype);
+MM.Action.SetShape.prototype.perform = function() {
+	this._item.setShape(this._shape);
 }
-MM.Action.Separallel.prototype.undo = function() {
-	this._item.separallel(this._oldShape);
+MM.Action.SetShape.prototype.undo = function() {
+	this._item.setShape(this._oldShape);
 }
 
 MM.Action.SetColor = function(item, color) {

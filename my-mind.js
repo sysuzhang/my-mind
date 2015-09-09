@@ -385,7 +385,7 @@ MM.Item.prototype.fromJSON = function(data) {
 	}
 	if (data.collapsed) { this.collapse(); }
 	if (data.layout) { this._layout = MM.Layout.getById(data.layout); }
-	if (data.shape) { this.separallel(MM.Shape.getById(data.shape)); }
+	if (data.shape) { this.setShape(MM.Shape.getById(data.shape)); }
 
 	(data.children || []).forEach(function(child) {
 		this.insertChild(MM.Item.fromJSON(child));
@@ -427,7 +427,7 @@ MM.Item.prototype.mergeWith = function(data) {
 	}
 
 	var s = (this._autoShape ? null : this._shape.id);
-	if (s != data.shape) { this.separallel(MM.Shape.getById(data.shape)); }
+	if (s != data.shape) { this.setShape(MM.Shape.getById(data.shape)); }
 
 	(data.children || []).forEach(function(child, index) {
 		if (index >= this._children.length) { /* new child */
@@ -497,7 +497,7 @@ MM.Item.prototype.update = function(doNotRecurse) {
 	this._dom.node.classList[this._collapsed ? "add" : "remove"]("collapsed");
 
 	this.getLayout().update(this);
-	this.geparallel().update(this);
+	this.getShape().update(this);
 	if (!this.isRoot() && !doNotRecurse) { this._parent.update(); }
 
 	return this;
@@ -606,7 +606,7 @@ MM.Item.prototype.setLayout = function(layout) {
 	return this.updateSubtree();	
 }
 
-MM.Item.prototype.geparallel = function() {
+MM.Item.prototype.getShape = function() {
 	return this._shape;
 }
 
@@ -614,7 +614,7 @@ MM.Item.prototype.getOwnShape = function() {
 	return (this._autoShape ? null : this._shape);
 }
 
-MM.Item.prototype.separallel = function(shape) {
+MM.Item.prototype.setShape = function(shape) {
 	if (this._shape) { this._shape.unset(this); }
 
 	if (shape) {
@@ -880,10 +880,10 @@ MM.Item.prototype._findLinks = function(node) {
 	}
 }
 MM.Map = function(options) {
-	//设置默认布局
+	//设置默认布局，不在修改默认的layout,不然无法修改状态
 	var o = {
 		root: "AI文件名",
-		layout: MM.Layout.Graph.Down
+		layout: MM.Layout.Map
 	}
 	for (var p in options) { o[p] = options[p]; }
 	this._root = null;
@@ -1332,17 +1332,17 @@ MM.Action.SetLayout.prototype.undo = function() {
 	this._item.setLayout(this._oldLayout);
 }
 
-MM.Action.Separallel = function(item, shape) {
+MM.Action.SetShape = function(item, shape) {
 	this._item = item;
 	this._shape = shape;
 	this._oldShape = item.getOwnShape();
 }
-MM.Action.Separallel.prototype = Object.create(MM.Action.prototype);
-MM.Action.Separallel.prototype.perform = function() {
-	this._item.separallel(this._shape);
+MM.Action.SetShape.prototype = Object.create(MM.Action.prototype);
+MM.Action.SetShape.prototype.perform = function() {
+	this._item.setShape(this._shape);
 }
-MM.Action.Separallel.prototype.undo = function() {
-	this._item.separallel(this._oldShape);
+MM.Action.SetShape.prototype.undo = function() {
+	this._item.setShape(this._oldShape);
 }
 
 MM.Action.SetColor = function(item, color) {
@@ -2354,7 +2354,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 	var R = this.SPACING_RANK/2;
 
 	/* first part */
-	var y1 = item.geparallel().getVerticalAnchor(item);
+	var y1 = item.getShape().getVerticalAnchor(item);
 	if (side == "left") {
 		var x1 = dom.content.offsetLeft - 0.5;
 	} else {
@@ -2366,7 +2366,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 
 	if (children.length == 1) {
 		var child = children[0];
-		var y2 = child.geparallel().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
+		var y2 = child.getShape().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
 		var x2 = this._getChildAnchor(child, side);
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
@@ -2392,8 +2392,8 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
  	var x = x2;
  	var xx = x + (side == "left" ? -R : R);
 
-	var y1 = c1.geparallel().getVerticalAnchor(c1) + c1.getDOM().node.offsetTop;
-	var y2 = c2.geparallel().getVerticalAnchor(c2) + c2.getDOM().node.offsetTop;
+	var y1 = c1.getShape().getVerticalAnchor(c1) + c1.getDOM().node.offsetTop;
+	var y2 = c2.getShape().getVerticalAnchor(c2) + c2.getDOM().node.offsetTop;
 	var x1 = this._getChildAnchor(c1, side);
 	var x2 = this._getChildAnchor(c2, side);
 
@@ -2407,7 +2407,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 
 	for (var i=1; i<children.length-1; i++) {
 		var c = children[i];
-		var y = c.geparallel().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
+		var y = c.getShape().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
 		ctx.moveTo(x, y);
 		ctx.lineTo(this._getChildAnchor(c, side), y);
 	}
@@ -2425,7 +2425,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 	/* first part */
 	var R = this.SPACING_RANK/2;
 	
-	var x = item.geparallel().getHorizontalAnchor(item);
+	var x = item.getShape().getHorizontalAnchor(item);
 	var height = (children.length == 1 ? 2*R : R);
 
 	if (side == "top") {
@@ -2433,7 +2433,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 		var y2 = y1 - height;
 		this._anchorToggle(item, x, y1, side);
 	} else {
-		var y1 = item.geparallel().getVerticalAnchor(item);
+		var y1 = item.getShape().getVerticalAnchor(item);
 		var y2 = dom.content.offsetHeight + height;
 		this._anchorToggle(item, x, dom.content.offsetHeight, side);
 	}
@@ -2452,8 +2452,8 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 	var offset = dom.content.offsetHeight + height;
 	var y = Math.round(side == "top" ? canvas.height - offset : offset) + 0.5;
 
-	var x1 = c1.geparallel().getHorizontalAnchor(c1) + c1.getDOM().node.offsetLeft;
-	var x2 = c2.geparallel().getHorizontalAnchor(c2) + c2.getDOM().node.offsetLeft;
+	var x1 = c1.getShape().getHorizontalAnchor(c1) + c1.getDOM().node.offsetLeft;
+	var x2 = c2.getShape().getHorizontalAnchor(c2) + c2.getDOM().node.offsetLeft;
 	var y1 = this._getChildAnchor(c1, side);
 	var y2 = this._getChildAnchor(c2, side);
 
@@ -2465,7 +2465,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 
 	for (var i=1; i<children.length-1; i++) {
 		var c = children[i];
-		var x = c.geparallel().getHorizontalAnchor(c) + c.getDOM().node.offsetLeft;
+		var x = c.getShape().getHorizontalAnchor(c) + c.getDOM().node.offsetLeft;
 		ctx.moveTo(x, y);
 		ctx.lineTo(x, this._getChildAnchor(c, side));
 	}
@@ -2574,9 +2574,9 @@ MM.Layout.Tree._drawLines = function(item, side) {
 	var ctx = canvas.getContext("2d");
 	ctx.strokeStyle = item.getColor();
 
-	var y1 = item.geparallel().getVerticalAnchor(item);
+	var y1 = item.getShape().getVerticalAnchor(item);
 	var last = children[children.length-1];
-	var y2 = last.geparallel().getVerticalAnchor(last) + last.getDOM().node.offsetTop;
+	var y2 = last.getShape().getVerticalAnchor(last) + last.getDOM().node.offsetTop;
 
 	ctx.beginPath();
 	ctx.moveTo(x, y1);
@@ -2585,7 +2585,7 @@ MM.Layout.Tree._drawLines = function(item, side) {
 	/* rounded connectors */
 	for (var i=0; i<children.length; i++) {
 		var c = children[i];
-		var y = c.geparallel().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
+		var y = c.getShape().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
 		var anchor = this._getChildAnchor(c, side);
 
 		ctx.moveTo(x, y - R);
@@ -2712,14 +2712,14 @@ MM.Layout.Map._drawRootConnectors = function(item, side, children) {
 	var R = this.SPACING_RANK/2;
 
 	var x1 = dom.content.offsetLeft + dom.content.offsetWidth/2;
-	var y1 = item.geparallel().getVerticalAnchor(item);
+	var y1 = item.getShape().getVerticalAnchor(item);
 	var half = this.LINE_THICKNESS/2;
 
 	for (var i=0;i<children.length;i++) {
 		var child = children[i];
 
 		var x2 = this._getChildAnchor(child, side);
-		var y2 = child.geparallel().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
+		var y2 = child.getShape().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
 		var angle = Math.atan2(y2-y1, x2-x1) + Math.PI/2;
 		var dx = Math.cos(angle) * half;
 		var dy = Math.sin(angle) * half;
@@ -3859,7 +3859,7 @@ MM.UI.Shape.prototype.update = function() {
 MM.UI.Shape.prototype.handleEvent = function(e) {
 	var shape = MM.Shape.getById(this._select.value);
 
-	var action = new MM.Action.Separallel(MM.App.current, shape);
+	var action = new MM.Action.SetShape(MM.App.current, shape);
 	MM.App.action(action);
 }
 MM.UI.Value = function() {

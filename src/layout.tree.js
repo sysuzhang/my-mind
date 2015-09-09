@@ -95,9 +95,9 @@ MM.Layout.Tree._drawLines = function(item, side) {
 	var ctx = canvas.getContext("2d");
 	ctx.strokeStyle = item.getColor();
 
-	var y1 = item.geparallel().getVerticalAnchor(item);
+	var y1 = item.getShape().getVerticalAnchor(item);
 	var last = children[children.length-1];
-	var y2 = last.geparallel().getVerticalAnchor(last) + last.getDOM().node.offsetTop;
+	var y2 = last.getShape().getVerticalAnchor(last) + last.getDOM().node.offsetTop;
 
 	ctx.beginPath();
 	ctx.moveTo(x, y1);
@@ -106,7 +106,7 @@ MM.Layout.Tree._drawLines = function(item, side) {
 	/* rounded connectors */
 	for (var i=0; i<children.length; i++) {
 		var c = children[i];
-		var y = c.geparallel().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
+		var y = c.getShape().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
 		var anchor = this._getChildAnchor(c, side);
 
 		ctx.moveTo(x, y - R);
