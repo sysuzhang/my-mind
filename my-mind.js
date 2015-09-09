@@ -2473,10 +2473,10 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 }
 
 
-MM.Layout.Graph.Down = MM.Layout.Graph.create("bottom", "graph-bottom", "Bottom");
-MM.Layout.Graph.Up = MM.Layout.Graph.create("top", "graph-top", "Top");
-MM.Layout.Graph.Left = MM.Layout.Graph.create("left", "graph-left", "Left");
-MM.Layout.Graph.Right = MM.Layout.Graph.create("right", "graph-right", "Right");
+MM.Layout.Graph.Down = MM.Layout.Graph.create("bottom", "graph-bottom", "向下");
+MM.Layout.Graph.Up = MM.Layout.Graph.create("top", "graph-top", "向上");
+MM.Layout.Graph.Left = MM.Layout.Graph.create("left", "graph-left", "向左");
+MM.Layout.Graph.Right = MM.Layout.Graph.create("right", "graph-right", "向右");
 MM.Layout.Tree = Object.create(MM.Layout, {
 	SPACING_RANK: {value: 32},
 	childDirection: {value: ""}
@@ -2595,11 +2595,11 @@ MM.Layout.Tree._drawLines = function(item, side) {
 	ctx.stroke();
 }
 
-MM.Layout.Tree.Left = MM.Layout.Tree.create("left", "tree-left", "Left");
-MM.Layout.Tree.Right = MM.Layout.Tree.create("right", "tree-right", "Right");
+MM.Layout.Tree.Left = MM.Layout.Tree.create("left", "tree-left", "向左");
+MM.Layout.Tree.Right = MM.Layout.Tree.create("right", "tree-right", "向右");
 MM.Layout.Map = Object.create(MM.Layout.Graph, {
 	id: {value:"map"},
-	label: {value:"Map"},
+	label: {value:"思维导图"},
 	LINE_THICKNESS: {value:8}
 });
 MM.Layout.ALL.push(MM.Layout.Map);
@@ -3795,13 +3795,13 @@ MM.UI.Layout = function() {
 
 	this._select.appendChild(MM.Layout.Map.buildOption());
 
-	var label = this._buildGroup("Graph");
+	var label = this._buildGroup("逻辑图");
 	label.appendChild(MM.Layout.Graph.Right.buildOption());
 	label.appendChild(MM.Layout.Graph.Left.buildOption());
 	label.appendChild(MM.Layout.Graph.Down.buildOption());
 	label.appendChild(MM.Layout.Graph.Up.buildOption());
 
-	var label = this._buildGroup("Tree");
+	var label = this._buildGroup("树状图");
 	label.appendChild(MM.Layout.Tree.Right.buildOption());
 	label.appendChild(MM.Layout.Tree.Left.buildOption());
 	
