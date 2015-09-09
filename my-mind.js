@@ -882,7 +882,7 @@ MM.Item.prototype._findLinks = function(node) {
 MM.Map = function(options) {
 	//设置默认布局
 	var o = {
-		root: "行为树编辑器",
+		root: "AI文件名",
 		layout: MM.Layout.Graph.Down
 	}
 	for (var p in options) { o[p] = options[p]; }
