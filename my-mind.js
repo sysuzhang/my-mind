@@ -385,7 +385,7 @@ MM.Item.prototype.fromJSON = function(data) {
 	}
 	if (data.collapsed) { this.collapse(); }
 	if (data.layout) { this._layout = MM.Layout.getById(data.layout); }
-	if (data.shape) { this.setShape(MM.Shape.getById(data.shape)); }
+	if (data.shape) { this.separallel(MM.Shape.getById(data.shape)); }
 
 	(data.children || []).forEach(function(child) {
 		this.insertChild(MM.Item.fromJSON(child));
@@ -427,7 +427,7 @@ MM.Item.prototype.mergeWith = function(data) {
 	}
 
 	var s = (this._autoShape ? null : this._shape.id);
-	if (s != data.shape) { this.setShape(MM.Shape.getById(data.shape)); }
+	if (s != data.shape) { this.separallel(MM.Shape.getById(data.shape)); }
 
 	(data.children || []).forEach(function(child, index) {
 		if (index >= this._children.length) { /* new child */
@@ -497,7 +497,7 @@ MM.Item.prototype.update = function(doNotRecurse) {
 	this._dom.node.classList[this._collapsed ? "add" : "remove"]("collapsed");
 
 	this.getLayout().update(this);
-	this.getShape().update(this);
+	this.geparallel().update(this);
 	if (!this.isRoot() && !doNotRecurse) { this._parent.update(); }
 
 	return this;
@@ -606,7 +606,7 @@ MM.Item.prototype.setLayout = function(layout) {
 	return this.updateSubtree();	
 }
 
-MM.Item.prototype.getShape = function() {
+MM.Item.prototype.geparallel = function() {
 	return this._shape;
 }
 
@@ -614,7 +614,7 @@ MM.Item.prototype.getOwnShape = function() {
 	return (this._autoShape ? null : this._shape);
 }
 
-MM.Item.prototype.setShape = function(shape) {
+MM.Item.prototype.separallel = function(shape) {
 	if (this._shape) { this._shape.unset(this); }
 
 	if (shape) {
@@ -756,8 +756,11 @@ MM.Item.prototype._getAutoShape = function() {
 		node = node.getParent();
 	}
 	switch (depth) {
-		case 0: return MM.Shape.Ellipse;
-		case 1: return MM.Shape.Box;
+		case 0: return MM.Shape.Root;
+		case 1: return MM.Shape.Ellipse;
+		case 2: return MM.Shape.Box;
+		case 3: return MM.Shape.Corner;
+		case 4: return MM.Shape.parallel;
 		default: return MM.Shape.Underline;
 	}
 }
@@ -877,9 +880,10 @@ MM.Item.prototype._findLinks = function(node) {
 	}
 }
 MM.Map = function(options) {
+	//设置默认布局
 	var o = {
-		root: "My Mind Map",
-		layout: MM.Layout.Map
+		root: "行为树编辑器",
+		layout: MM.Layout.Graph.Down
 	}
 	for (var p in options) { o[p] = options[p]; }
 	this._root = null;
@@ -1328,17 +1332,17 @@ MM.Action.SetLayout.prototype.undo = function() {
 	this._item.setLayout(this._oldLayout);
 }
 
-MM.Action.SetShape = function(item, shape) {
+MM.Action.Separallel = function(item, shape) {
 	this._item = item;
 	this._shape = shape;
 	this._oldShape = item.getOwnShape();
 }
-MM.Action.SetShape.prototype = Object.create(MM.Action.prototype);
-MM.Action.SetShape.prototype.perform = function() {
-	this._item.setShape(this._shape);
+MM.Action.Separallel.prototype = Object.create(MM.Action.prototype);
+MM.Action.Separallel.prototype.perform = function() {
+	this._item.separallel(this._shape);
 }
-MM.Action.SetShape.prototype.undo = function() {
-	this._item.setShape(this._oldShape);
+MM.Action.Separallel.prototype.undo = function() {
+	this._item.separallel(this._oldShape);
 }
 
 MM.Action.SetColor = function(item, color) {
@@ -1607,7 +1611,7 @@ MM.Command.isValid = function() {
 MM.Command.execute = function() {}
 
 MM.Command.Undo = Object.create(MM.Command, {
-	label: {value: "Undo"},
+	label: {value: "撤消"},
 	keys: {value: [{keyCode: "Z".charCodeAt(0), ctrlKey: true}]}
 });
 MM.Command.Undo.isValid = function() {
@@ -1619,7 +1623,7 @@ MM.Command.Undo.execute = function() {
 }
 
 MM.Command.Redo = Object.create(MM.Command, {
-	label: {value: "Redo"},
+	label: {value: "恢复"},
 	keys: {value: [{keyCode: "Y".charCodeAt(0), ctrlKey: true}]},
 });
 MM.Command.Redo.isValid = function() {
@@ -1631,7 +1635,7 @@ MM.Command.Redo.execute = function() {
 }
 
 MM.Command.InsertSibling = Object.create(MM.Command, {
-	label: {value: "Insert a sibling"},
+	label: {value: "插入同级节点"},
 	keys: {value: [{keyCode: 13}]}
 });
 MM.Command.InsertSibling.execute = function() {
@@ -1651,7 +1655,7 @@ MM.Command.InsertSibling.execute = function() {
 }
 
 MM.Command.InsertChild = Object.create(MM.Command, {
-	label: {value: "Insert a child"},
+	label: {value: "插入子节点"},
 	keys: {value: [
 		{keyCode: 9, ctrlKey:false},
 		{keyCode: 45}
@@ -1668,7 +1672,7 @@ MM.Command.InsertChild.execute = function() {
 }
 
 MM.Command.Delete = Object.create(MM.Command, {
-	label: {value: "Delete an item"},
+	label: {value: "删除节点"},
 	keys: {value: [{keyCode: 46}]}
 });
 MM.Command.Delete.isValid = function() {
@@ -1680,7 +1684,7 @@ MM.Command.Delete.execute = function() {
 }
 
 MM.Command.Swap = Object.create(MM.Command, {
-	label: {value: "Swap sibling"},
+	label: {value: "交换同级节点"},
 	keys: {value: [
 		{keyCode: 38, ctrlKey:true},
 		{keyCode: 40, ctrlKey:true},
@@ -1696,7 +1700,7 @@ MM.Command.Swap.execute = function(e) {
 }
 
 MM.Command.Side = Object.create(MM.Command, {
-	label: {value: "Change side"},
+	label: {value: "交换"},
 	keys: {value: [
 		{keyCode: 37, ctrlKey:true},
 		{keyCode: 39, ctrlKey:true},
@@ -1712,7 +1716,7 @@ MM.Command.Side.execute = function(e) {
 }
 
 MM.Command.Save = Object.create(MM.Command, {
-	label: {value: "Save map"},
+	label: {value: "保存"},
 	keys: {value: [{keyCode: "S".charCodeAt(0), ctrlKey:true, shiftKey:false}]}
 });
 MM.Command.Save.execute = function() {
@@ -1720,7 +1724,7 @@ MM.Command.Save.execute = function() {
 }
 
 MM.Command.SaveAs = Object.create(MM.Command, {
-	label: {value: "Save as&hellip;"},
+	label: {value: "另存为&hellip;"},
 	keys: {value: [{keyCode: "S".charCodeAt(0), ctrlKey:true, shiftKey:true}]}
 });
 MM.Command.SaveAs.execute = function() {
@@ -1728,7 +1732,7 @@ MM.Command.SaveAs.execute = function() {
 }
 
 MM.Command.Load = Object.create(MM.Command, {
-	label: {value: "Load map"},
+	label: {value: "打开行为树"},
 	keys: {value: [{keyCode: "O".charCodeAt(0), ctrlKey:true}]}
 });
 MM.Command.Load.execute = function() {
@@ -1736,7 +1740,7 @@ MM.Command.Load.execute = function() {
 }
 
 MM.Command.Center = Object.create(MM.Command, {
-	label: {value: "Center map"},
+	label: {value: "居中"},
 	keys: {value: [{keyCode: 35}]}
 });
 MM.Command.Center.execute = function() {
@@ -1744,18 +1748,18 @@ MM.Command.Center.execute = function() {
 }
 
 MM.Command.New = Object.create(MM.Command, {
-	label: {value: "New map"},
+	label: {value: "新建行为树"},
 	keys: {value: [{keyCode: "N".charCodeAt(0), ctrlKey:true}]}
 });
 MM.Command.New.execute = function() {
-	if (!confirm("Throw away your current map and start a new one?")) { return; }
+	if (!confirm("放弃当前编辑的行为树并创建新的行为树?")) { return; }
 	var map = new MM.Map();
 	MM.App.setMap(map);
 	MM.publish("map-new", this);
 }
 
 MM.Command.ZoomIn = Object.create(MM.Command, {
-	label: {value: "Zoom in"},
+	label: {value: "放大"},
 	keys: {value: [{charCode:"+".charCodeAt(0)}]}
 });
 MM.Command.ZoomIn.execute = function() {
@@ -1763,7 +1767,7 @@ MM.Command.ZoomIn.execute = function() {
 }
 
 MM.Command.ZoomOut = Object.create(MM.Command, {
-	label: {value: "Zoom out"},
+	label: {value: "缩小"},
 	keys: {value: [{charCode:"-".charCodeAt(0)}]}
 });
 MM.Command.ZoomOut.execute = function() {
@@ -1771,7 +1775,7 @@ MM.Command.ZoomOut.execute = function() {
 }
 
 MM.Command.Help = Object.create(MM.Command, {
-	label: {value: "Show/hide help"},
+	label: {value: "打开/关闭 帮助"},
 	keys: {value: [{charCode: "?".charCodeAt(0)}]}
 });
 MM.Command.Help.execute = function() {
@@ -1779,7 +1783,7 @@ MM.Command.Help.execute = function() {
 }
 
 MM.Command.UI = Object.create(MM.Command, {
-	label: {value: "Show/hide UI"},
+	label: {value: "打开/关闭 属性配置窗口"},
 	keys: {value: [{charCode: "*".charCodeAt(0)}]}
 });
 MM.Command.UI.execute = function() {
@@ -1787,7 +1791,7 @@ MM.Command.UI.execute = function() {
 }
 
 MM.Command.Pan = Object.create(MM.Command, {
-	label: {value: "Pan the map"},
+	label: {value: "移动节点"},
 	keys: {value: [
 		{keyCode: "W".charCodeAt(0), ctrlKey:false, altKey:false, metaKey:false},
 		{keyCode: "A".charCodeAt(0), ctrlKey:false, altKey:false, metaKey:false},
@@ -1840,7 +1844,7 @@ MM.Command.Pan.handleEvent = function(e) {
 }
 
 MM.Command.Copy = Object.create(MM.Command, {
-	label: {value: "Copy"},
+	label: {value: "复制"},
 	prevent: {value: false},
 	keys: {value: [
 		{keyCode: "C".charCodeAt(0), ctrlKey:true},
@@ -1852,7 +1856,7 @@ MM.Command.Copy.execute = function() {
 }
 
 MM.Command.Cut = Object.create(MM.Command, {
-	label: {value: "Cut"},
+	label: {value: "剪切"},
 	prevent: {value: false},
 	keys: {value: [
 		{keyCode: "X".charCodeAt(0), ctrlKey:true},
@@ -1864,7 +1868,7 @@ MM.Command.Cut.execute = function() {
 }
 
 MM.Command.Paste = Object.create(MM.Command, {
-	label: {value: "Paste"},
+	label: {value: "粘贴"},
 	prevent: {value: false},
 	keys: {value: [
 		{keyCode: "V".charCodeAt(0), ctrlKey:true},
@@ -1876,7 +1880,7 @@ MM.Command.Paste.execute = function() {
 }
 
 MM.Command.Fold = Object.create(MM.Command, {
-	label: {value: "Fold/Unfold"},
+	label: {value: "折叠/展开"},
 	keys: {value: [{charCode: "f".charCodeAt(0), ctrlKey:false}]}
 });
 MM.Command.Fold.execute = function() {
@@ -1885,7 +1889,7 @@ MM.Command.Fold.execute = function() {
 	MM.App.map.ensureItemVisibility(item);
 }
 MM.Command.Edit = Object.create(MM.Command, {
-	label: {value: "Edit item"},
+	label: {value: "编辑"},
 	keys: {value: [
 		{keyCode: 32},
 		{keyCode: 113}
@@ -1912,7 +1916,7 @@ MM.Command.Finish.execute = function() {
 }
 
 MM.Command.Newline = Object.create(MM.Command, {
-	label: {value: "Line break"},
+	label: {value: "换行"},
 	keys: {value: [
 		{keyCode: 13, shiftKey:true},
 		{keyCode: 13, ctrlKey:true}
@@ -1963,30 +1967,30 @@ MM.Command.Style.execute = function() {
 
 MM.Command.Bold = Object.create(MM.Command.Style, {
 	command: {value: "bold"},
-	label: {value: "Bold"},
+	label: {value: "粗体"},
 	keys: {value: [{keyCode: "B".charCodeAt(0), ctrlKey:true}]}
 });
 
 MM.Command.Underline = Object.create(MM.Command.Style, {
 	command: {value: "underline"},
-	label: {value: "Underline"},
+	label: {value: "下划线"},
 	keys: {value: [{keyCode: "U".charCodeAt(0), ctrlKey:true}]}
 });
 
 MM.Command.Italic = Object.create(MM.Command.Style, {
 	command: {value: "italic"},
-	label: {value: "Italic"},
+	label: {value: "斜体"},
 	keys: {value: [{keyCode: "I".charCodeAt(0), ctrlKey:true}]}
 });
 
 MM.Command.Strikethrough = Object.create(MM.Command.Style, {
 	command: {value: "strikeThrough"},
-	label: {value: "Strike-through"},
+	label: {value: "删除线"},
 	keys: {value: [{keyCode: "S".charCodeAt(0), ctrlKey:true}]}
 });
 
 MM.Command.Value = Object.create(MM.Command, {
-	label: {value: "Set value"},
+	label: {value: "设置节点值"},
 	keys: {value: [{charCode: "v".charCodeAt(0), ctrlKey:false, metaKey:false}]}
 });
 MM.Command.Value.execute = function() {
@@ -2003,7 +2007,7 @@ MM.Command.Value.execute = function() {
 }
 
 MM.Command.Yes = Object.create(MM.Command, {
-	label: {value: "Yes"},
+	label: {value: "完成"},
 	keys: {value: [{charCode: "y".charCodeAt(0), ctrlKey:false}]}
 });
 MM.Command.Yes.execute = function() {
@@ -2014,7 +2018,7 @@ MM.Command.Yes.execute = function() {
 }
 
 MM.Command.No = Object.create(MM.Command, {
-	label: {value: "No"},
+	label: {value: "未完成"},
 	keys: {value: [{charCode: "n".charCodeAt(0), ctrlKey:false}]}
 });
 MM.Command.No.execute = function() {
@@ -2025,7 +2029,7 @@ MM.Command.No.execute = function() {
 }
 
 MM.Command.Computed = Object.create(MM.Command, {
-	label: {value: "Computed"},
+	label: {value: "进行中"},
 	keys: {value: [{charCode: "c".charCodeAt(0), ctrlKey:false, metaKey:false}]}
 });
 MM.Command.Computed.execute = function() {
@@ -2035,7 +2039,7 @@ MM.Command.Computed.execute = function() {
 	MM.App.action(action);
 }
 MM.Command.Select = Object.create(MM.Command, {
-	label: {value: "Move selection"},
+	label: {value: "移动所选节点"},
 	keys: {value: [
 		{keyCode: 38, ctrlKey:false},
 		{keyCode: 37, ctrlKey:false},
@@ -2058,7 +2062,7 @@ MM.Command.Select.execute = function(e) {
 }
 
 MM.Command.SelectRoot = Object.create(MM.Command, {
-	label: {value: "Select root"},
+	label: {value: "选择根节点"},
 	keys: {value: [{keyCode: 36}]}
 });
 MM.Command.SelectRoot.execute = function() {
@@ -2068,7 +2072,7 @@ MM.Command.SelectRoot.execute = function() {
 }
 
 MM.Command.SelectParent = Object.create(MM.Command, {
-	label: {value: "Select parent"},
+	label: {value: "选择父节点"},
 	keys: {value: [{keyCode: 8}]}
 });
 MM.Command.SelectParent.execute = function() {
@@ -2350,7 +2354,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 	var R = this.SPACING_RANK/2;
 
 	/* first part */
-	var y1 = item.getShape().getVerticalAnchor(item);
+	var y1 = item.geparallel().getVerticalAnchor(item);
 	if (side == "left") {
 		var x1 = dom.content.offsetLeft - 0.5;
 	} else {
@@ -2362,7 +2366,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 
 	if (children.length == 1) {
 		var child = children[0];
-		var y2 = child.getShape().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
+		var y2 = child.geparallel().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
 		var x2 = this._getChildAnchor(child, side);
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
@@ -2388,8 +2392,8 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
  	var x = x2;
  	var xx = x + (side == "left" ? -R : R);
 
-	var y1 = c1.getShape().getVerticalAnchor(c1) + c1.getDOM().node.offsetTop;
-	var y2 = c2.getShape().getVerticalAnchor(c2) + c2.getDOM().node.offsetTop;
+	var y1 = c1.geparallel().getVerticalAnchor(c1) + c1.getDOM().node.offsetTop;
+	var y2 = c2.geparallel().getVerticalAnchor(c2) + c2.getDOM().node.offsetTop;
 	var x1 = this._getChildAnchor(c1, side);
 	var x2 = this._getChildAnchor(c2, side);
 
@@ -2403,7 +2407,7 @@ MM.Layout.Graph._drawHorizontalConnectors = function(item, side, children) {
 
 	for (var i=1; i<children.length-1; i++) {
 		var c = children[i];
-		var y = c.getShape().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
+		var y = c.geparallel().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
 		ctx.moveTo(x, y);
 		ctx.lineTo(this._getChildAnchor(c, side), y);
 	}
@@ -2421,7 +2425,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 	/* first part */
 	var R = this.SPACING_RANK/2;
 	
-	var x = item.getShape().getHorizontalAnchor(item);
+	var x = item.geparallel().getHorizontalAnchor(item);
 	var height = (children.length == 1 ? 2*R : R);
 
 	if (side == "top") {
@@ -2429,7 +2433,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 		var y2 = y1 - height;
 		this._anchorToggle(item, x, y1, side);
 	} else {
-		var y1 = item.getShape().getVerticalAnchor(item);
+		var y1 = item.geparallel().getVerticalAnchor(item);
 		var y2 = dom.content.offsetHeight + height;
 		this._anchorToggle(item, x, dom.content.offsetHeight, side);
 	}
@@ -2448,8 +2452,8 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 	var offset = dom.content.offsetHeight + height;
 	var y = Math.round(side == "top" ? canvas.height - offset : offset) + 0.5;
 
-	var x1 = c1.getShape().getHorizontalAnchor(c1) + c1.getDOM().node.offsetLeft;
-	var x2 = c2.getShape().getHorizontalAnchor(c2) + c2.getDOM().node.offsetLeft;
+	var x1 = c1.geparallel().getHorizontalAnchor(c1) + c1.getDOM().node.offsetLeft;
+	var x2 = c2.geparallel().getHorizontalAnchor(c2) + c2.getDOM().node.offsetLeft;
 	var y1 = this._getChildAnchor(c1, side);
 	var y2 = this._getChildAnchor(c2, side);
 
@@ -2461,7 +2465,7 @@ MM.Layout.Graph._drawVerticalConnectors = function(item, side, children) {
 
 	for (var i=1; i<children.length-1; i++) {
 		var c = children[i];
-		var x = c.getShape().getHorizontalAnchor(c) + c.getDOM().node.offsetLeft;
+		var x = c.geparallel().getHorizontalAnchor(c) + c.getDOM().node.offsetLeft;
 		ctx.moveTo(x, y);
 		ctx.lineTo(x, this._getChildAnchor(c, side));
 	}
@@ -2570,9 +2574,9 @@ MM.Layout.Tree._drawLines = function(item, side) {
 	var ctx = canvas.getContext("2d");
 	ctx.strokeStyle = item.getColor();
 
-	var y1 = item.getShape().getVerticalAnchor(item);
+	var y1 = item.geparallel().getVerticalAnchor(item);
 	var last = children[children.length-1];
-	var y2 = last.getShape().getVerticalAnchor(last) + last.getDOM().node.offsetTop;
+	var y2 = last.geparallel().getVerticalAnchor(last) + last.getDOM().node.offsetTop;
 
 	ctx.beginPath();
 	ctx.moveTo(x, y1);
@@ -2581,7 +2585,7 @@ MM.Layout.Tree._drawLines = function(item, side) {
 	/* rounded connectors */
 	for (var i=0; i<children.length; i++) {
 		var c = children[i];
-		var y = c.getShape().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
+		var y = c.geparallel().getVerticalAnchor(c) + c.getDOM().node.offsetTop;
 		var anchor = this._getChildAnchor(c, side);
 
 		ctx.moveTo(x, y - R);
@@ -2708,14 +2712,14 @@ MM.Layout.Map._drawRootConnectors = function(item, side, children) {
 	var R = this.SPACING_RANK/2;
 
 	var x1 = dom.content.offsetLeft + dom.content.offsetWidth/2;
-	var y1 = item.getShape().getVerticalAnchor(item);
+	var y1 = item.geparallel().getVerticalAnchor(item);
 	var half = this.LINE_THICKNESS/2;
 
 	for (var i=0;i<children.length;i++) {
 		var child = children[i];
 
 		var x2 = this._getChildAnchor(child, side);
-		var y2 = child.getShape().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
+		var y2 = child.geparallel().getVerticalAnchor(child) + child.getDOM().node.offsetTop;
 		var angle = Math.atan2(y2-y1, x2-x1) + Math.PI/2;
 		var dx = Math.cos(angle) * half;
 		var dy = Math.sin(angle) * half;
@@ -2760,7 +2764,7 @@ MM.Shape.getVerticalAnchor = function(item) {
 }
 MM.Shape.Underline = Object.create(MM.Shape, {
 	id: {value: "underline"},
-	label: {value: "Underline"},
+	label: {value: "行为"},
 	VERTICAL_OFFSET: {value: -3}
 });
 
@@ -2785,13 +2789,29 @@ MM.Shape.Underline.getVerticalAnchor = function(item) {
 	var node = item.getDOM().content;
 	return node.offsetTop + node.offsetHeight + this.VERTICAL_OFFSET + 0.5;
 }
+
+
+MM.Shape.Root = Object.create(MM.Shape, {
+	id: {value: "root"},
+	label: {value: "Root"}
+});
+
 MM.Shape.Box = Object.create(MM.Shape, {
 	id: {value: "box"},
-	label: {value: "Box"}
+	label: {value: "顺序"}
 });
 MM.Shape.Ellipse = Object.create(MM.Shape, {
 	id: {value: "ellipse"},
-	label: {value: "Ellipse"}
+	label: {value: "选择"}
+});
+MM.Shape.Corner = Object.create(MM.Shape, {
+	id: {value: "corner"},
+	label: {value: "条件"}
+});
+
+MM.Shape.parallel = Object.create(MM.Shape, {
+	id: {value: "parallel"},
+	label: {value: "并行"}
 });
 MM.Format = Object.create(MM.Repo, {
 	extension: {value:""},
@@ -3818,8 +3838,11 @@ MM.UI.Layout.prototype._buildGroup = function(label) {
 MM.UI.Shape = function() {
 	this._select = document.querySelector("#shape");
 	
+	this._select.appendChild(MM.Shape.Root.buildOption());
 	this._select.appendChild(MM.Shape.Box.buildOption());
 	this._select.appendChild(MM.Shape.Ellipse.buildOption());
+	this._select.appendChild(MM.Shape.Corner.buildOption());
+	this._select.appendChild(MM.Shape.parallel.buildOption());
 	this._select.appendChild(MM.Shape.Underline.buildOption());
 	
 	this._select.addEventListener("change", this);
@@ -3836,7 +3859,7 @@ MM.UI.Shape.prototype.update = function() {
 MM.UI.Shape.prototype.handleEvent = function(e) {
 	var shape = MM.Shape.getById(this._select.value);
 
-	var action = new MM.Action.SetShape(MM.App.current, shape);
+	var action = new MM.Action.Separallel(MM.App.current, shape);
 	MM.App.action(action);
 }
 MM.UI.Value = function() {
@@ -5124,7 +5147,7 @@ MM.App = {
 
 			case "item-change":
 				if (publisher.isRoot() && publisher.getMap() == this.map) {
-					document.title = this.map.getName() + " :: My Mind";
+					document.title = this.map.getName() + " :: 启示工作室";
 				}
 			break;
 		}

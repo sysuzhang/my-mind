@@ -117,7 +117,7 @@ MM.Command.Value.execute = function() {
 }
 
 MM.Command.Yes = Object.create(MM.Command, {
-	label: {value: "Yes"},
+	label: {value: "完成"},
 	keys: {value: [{charCode: "y".charCodeAt(0), ctrlKey:false}]}
 });
 MM.Command.Yes.execute = function() {
@@ -128,7 +128,7 @@ MM.Command.Yes.execute = function() {
 }
 
 MM.Command.No = Object.create(MM.Command, {
-	label: {value: "No"},
+	label: {value: "未完成"},
 	keys: {value: [{charCode: "n".charCodeAt(0), ctrlKey:false}]}
 });
 MM.Command.No.execute = function() {
@@ -139,7 +139,7 @@ MM.Command.No.execute = function() {
 }
 
 MM.Command.Computed = Object.create(MM.Command, {
-	label: {value: "Computed"},
+	label: {value: "进行中"},
 	keys: {value: [{charCode: "c".charCodeAt(0), ctrlKey:false, metaKey:false}]}
 });
 MM.Command.Computed.execute = function() {

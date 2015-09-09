@@ -29,7 +29,7 @@ MM.Format.FreeMind.from = function(data) {
 		root: this._parseNode(root, {shape:"underline"})
 	};
 	json.root.layout = "map";
-	json.root.shape = "ellipse";
+	json.root.shape = "root";
 
 	return json;
 }

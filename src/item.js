@@ -96,7 +96,7 @@ MM.Item.prototype.fromJSON = function(data) {
 	}
 	if (data.collapsed) { this.collapse(); }
 	if (data.layout) { this._layout = MM.Layout.getById(data.layout); }
-	if (data.shape) { this.setShape(MM.Shape.getById(data.shape)); }
+	if (data.shape) { this.separallel(MM.Shape.getById(data.shape)); }
 
 	(data.children || []).forEach(function(child) {
 		this.insertChild(MM.Item.fromJSON(child));
@@ -138,7 +138,7 @@ MM.Item.prototype.mergeWith = function(data) {
 	}
 
 	var s = (this._autoShape ? null : this._shape.id);
-	if (s != data.shape) { this.setShape(MM.Shape.getById(data.shape)); }
+	if (s != data.shape) { this.separallel(MM.Shape.getById(data.shape)); }
 
 	(data.children || []).forEach(function(child, index) {
 		if (index >= this._children.length) { /* new child */
@@ -208,7 +208,7 @@ MM.Item.prototype.update = function(doNotRecurse) {
 	this._dom.node.classList[this._collapsed ? "add" : "remove"]("collapsed");
 
 	this.getLayout().update(this);
-	this.getShape().update(this);
+	this.geparallel().update(this);
 	if (!this.isRoot() && !doNotRecurse) { this._parent.update(); }
 
 	return this;
@@ -317,7 +317,7 @@ MM.Item.prototype.setLayout = function(layout) {
 	return this.updateSubtree();	
 }
 
-MM.Item.prototype.getShape = function() {
+MM.Item.prototype.geparallel = function() {
 	return this._shape;
 }
 
@@ -325,7 +325,7 @@ MM.Item.prototype.getOwnShape = function() {
 	return (this._autoShape ? null : this._shape);
 }
 
-MM.Item.prototype.setShape = function(shape) {
+MM.Item.prototype.separallel = function(shape) {
 	if (this._shape) { this._shape.unset(this); }
 
 	if (shape) {

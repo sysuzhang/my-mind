@@ -1,8 +1,10 @@
 MM.UI.Shape = function() {
 	this._select = document.querySelector("#shape");
 	
+	this._select.appendChild(MM.Shape.Root.buildOption());
 	this._select.appendChild(MM.Shape.Box.buildOption());
 	this._select.appendChild(MM.Shape.Ellipse.buildOption());
+	this._select.appendChild(MM.Shape.Corner.buildOption());
 	this._select.appendChild(MM.Shape.Underline.buildOption());
 	
 	this._select.addEventListener("change", this);
